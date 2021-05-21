@@ -1,0 +1,76 @@
+---
+title: "Developing Data Products, Reproducible Pitch"
+author: "Ruben Mkrtchyan"
+date: "21/05/2021"
+output: ioslides_presentation
+---
+
+## About the Projects and the Presentation
+For Developing Data Products course, offered by John Hopkins University, we need to create a R shiny app and then have a reproducible pitch which will describe it and show some of the code of server.R and ui.R of the shiny app. For my project I have created a shiny app which takes two inputs - height and body weight - and calculates the person's Body Mass Index (BMI) score based on the inputs. The server.R, ui.R and the R code of this pitch can be found in the following repository: https://github.com/RubenMkrtchyan/R_Shiny_BMI 
+The web version of the app is deployed here: https://rubenmkrtchyan.shinyapps.io/r_shiny_bmi/
+
+## What is BMI? 
+The body mass index (BMI) is a measure that uses your height and weight to work out if your weight is healthy. The BMI calculation divides an adult's weight in kilograms by their height in metres squared. The BMI is a convenient rule of thumb used to broadly categorize a person as underweight, normal weight, overweight, or obese based on tissue mass (muscle, fat, and bone) and height. BMI takes into account natural variations in body shape, giving a healthy weight range for a particular height. Muscle is much denser than fat, so very muscular people, such as heavyweight boxers, weight trainers and athletes, may be a healthy weight even though their BMI is classed as obese. These recommended distinctions along the linear scale may vary from time to time and country to country, making global, longitudinal surveys problematic. More info about BMI score can be found here: https://en.wikipedia.org/wiki/Body_mass_index
+                      
+## Some code of ui.R
+```{r eval = FALSE, }
+library(shiny)
+shinyUI(fluidPage(
+    titlePanel("BMI Calculator"),
+    sidebarLayout(
+        sidebarPanel(
+            helpText("Please enter your body weight and height"),
+            selectInput("select_measurement", label = h5("Select the measurement"), choices = list("European Measures: kg and cm" = 1, "US Measures: lb and inches" = 2), selected = 1),
+            numericInput("input_weight", label = h5("Please enter your body weight"),min = 1, value = NULL),
+            numericInput("input_height", label = h5("Please enter your height"),min = 1, value = NULL),
+            actionButton("calculate_button", label = "Calculate my BMI score")
+        ),
+        mainPanel(
+            tabsetPanel(
+                tabPanel("BMI score",
+                         p(h5("")), textOutput("output_weight"),
+                         textOutput("output_height"),  p(h3("Your BMI score:")),
+                         textOutput("output_bmi")
+                ),
+                tabPanel("What is BMI",
+                         p(h3("What is Body Mass Index and what it is used for?")),
+                         HTML("Some text about BMI")
+                ),
+                tabPanel("BMI Score Ranges ",
+                         p(h4("This is the World Health Organization's (WHO) recommended body weight based on BMI values for adults. It is used for both men and women, age 18 or older.")),
+                         HTML("ranges of bmi scores according to WHO"
+                )
+            )
+        )
+    )
+)
+))
+```                         
+## Some code of server.R
+```{r eval = FALSE}
+library(shiny)
+library(htmlwidgets)
+shinyServer(function(input, output) {
+    result <- reactiveValues()
+    observe({
+        input$calculate_button
+        if(input$select_measurement == 1)
+        {
+            result$bmi <- isolate({
+                input$input_weight / ((input$input_height/100)^2)
+            })
+        }
+        else
+        {
+            result$bmi <- isolate({
+                (703 * input$input_weight) / ((input$input_height)^2)
+            })
+        }
+    })
+    output$output_bmi <- renderText({
+        if(input$calculate_button == 0) ""
+        else
+            paste(round(result$bmi, digits = 2))
+    })
+})
+```
